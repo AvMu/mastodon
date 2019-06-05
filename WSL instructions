@@ -43,6 +43,7 @@ sudo -u postgres psql
 p
 CREATE USER mastodon CREATEDB;
 ALTER USER mastodon PASSWORD 'm'; 
+CREATE DATABASE db_copied_extrnly;
 \q
 
 # /etc/nginx/sites-available/plank.life.conf file is posted as error2 - 2nd comment
@@ -111,5 +112,7 @@ WantedBy=multi-user.target
 sudo su - mastodon
 cd ~/live
 RAILS_ENV=production bundle exec rake mastodon:setup
+# OR copy existing db pasted @ /var/lib/postgresql/mastodon_development.bak
+psql db_copied_extrnly < mastodon_development.bak
 
 
