@@ -22,8 +22,11 @@ exec bash
 type rbenv
 git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 
-rbenv install 2.6.1
+RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 2.6.1
 rbenv global 2.6.1
+gem update --system
+gem install bundler --no-document
+
 
 cd ~
 git clone https://github.com/tootsuite/mastodon.git live
@@ -43,7 +46,9 @@ sudo -u postgres psql
 p
 CREATE USER mastodon CREATEDB;
 ALTER USER mastodon PASSWORD 'm'; 
-CREATE DATABASE db_copied_extrnly;
+alter user mastodon with superuser;
+CREATE DATABASE mastodon_development;
+ALTER DATABASE mastodon_development OWNER TO mastodon;
 \q
 
 # /etc/nginx/sites-available/plank.life.conf file is posted as error2 - 2nd comment
@@ -113,6 +118,6 @@ sudo su - mastodon
 cd ~/live
 RAILS_ENV=production bundle exec rake mastodon:setup
 # OR copy existing db pasted @ /var/lib/postgresql/mastodon_development.bak
-psql db_copied_extrnly < mastodon_development.bak
+psql mastodon_development < mastodon_development.bak
 
 
