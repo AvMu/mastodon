@@ -51,6 +51,8 @@ CREATE DATABASE mastodon_development;
 ALTER DATABASE mastodon_development OWNER TO mastodon;
 create database mastodon;
 ALTER DATABASE mastodon OWNER TO mastodon;
+create database mastodon_test;
+ALTER DATABASE mastodon_test OWNER TO mastodon;
 \q
 
 # /etc/nginx/sites-available/plank.life.conf file is posted as error2 - 2nd comment
