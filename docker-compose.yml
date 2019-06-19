@@ -13,7 +13,7 @@ services:
 
   redis:
     restart: always
-    image: redis:4.0-alpine
+    image: redis:5.0-alpine
     networks:
       - internal_network
     healthcheck:
@@ -34,9 +34,15 @@ services:
 #      - ./elasticsearch:/usr/share/elasticsearch/data
 
   web:
-    build: .
-    image: tootsuite/mastodon
+#    build: .
+    image: tootsuite/mastodon:latest
     restart: always
+    environment:
+      - S3_BUCKET=plankjuna
+      - AWS_ACCESS_KEY_ID=AKIA6PRKLNJFFKXSTDUN
+      - AWS_SECRET_ACCESS_KEY=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
+      - S3_REGION=ap-south-1
+      - S3_HOSTNAME=plankjuna.s3.ap-south-1.amazonaws.com
     env_file: .env.production
     command: bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000 -b '0.0.0.0'"
     networks:
@@ -45,17 +51,19 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider --header 'x-forwarded-proto: https' --proxy=off localhost:3000/api/v1/instance || exit 1"]
     ports:
-      - "127.0.0.1:3000:3000"
+      - "0.0.0.0:3000:3000"
     depends_on:
       - db
       - redis
 #      - es
     volumes:
       - ./public/system:/mastodon/public/system
+      - ./public/assets:/mastodon/public/assets
+      - ./public/packs:/mastodon/public/packs
 
   streaming:
-    build: .
-    image: tootsuite/mastodon
+#    build: .
+    image: tootsuite/mastodon:latest
     restart: always
     env_file: .env.production
     command: yarn start
@@ -65,14 +73,14 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider --header 'x-forwarded-proto: https' --proxy=off localhost:4000/api/v1/streaming/health || exit 1"]
     ports:
-      - "127.0.0.1:4000:4000"
+      - "0.0.0.0:4000:4000"
     depends_on:
       - db
       - redis
 
   sidekiq:
-    build: .
-    image: tootsuite/mastodon
+ #   build: .
+    image: tootsuite/mastodon:latest
     restart: always
     env_file: .env.production
     command: bundle exec sidekiq
@@ -84,6 +92,7 @@ services:
       - internal_network
     volumes:
       - ./public/system:/mastodon/public/system
+      - ./public/packs:/mastodon/public/packs
 ## Uncomment to enable federation with tor instances along with adding the following ENV variables
 ## http_proxy=http://privoxy:8118
 ## ALLOW_ACCESS_TO_HIDDEN_SERVICE=true
