@@ -93,3 +93,32 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+
+## AWS - docker - ubuntu 18.04
+
+**Overview**
+Below are the step by step instructions for getting a mastodon instance running smoothly on AWS using Docker. 
+
+**Pre-requisites**
+  A. AWS t2 small instance
+  B. AWS S3 bucket
+  C. relevant user groups and keys for accessing intra AWS services
+  D. domain name with valid SSL
+
+**Modus operandi**
+  A.
+    1. As you login to AWS console from any browser, you can search / navigate to EC2.
+    2. If you want to run without incurring much cost, t2micro would be ideal. However, even after swap memory allocation, the installation fails at precompiling assets. Hence, t2small is preferred for smooth and error free installation.
+    3. Tried with free tier Linux AMI, but the installation would stuck up to some random unknown error. Hence, preferred choice would be latest stable version of ubuntu available from list. 
+    4. once you review and launch, you can check the inbound rules for this EC2 instance by clicking launch wizard besides <inbound rules/>
+
+
+
+
+
+You can open issues for bugs you've found or features you think are missing. You can also submit pull requests to this repository, or submit translations using Weblate. To get started, take a look at [CONTRIBUTING.md](CONTRIBUTING.md). If your contributions are accepted into Mastodon, you can request to be paid through [our OpenCollective](https://opencollective.com/mastodon).
+
+
+
