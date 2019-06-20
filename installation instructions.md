@@ -176,7 +176,7 @@ Add the following line to file fstab # use ctrl+end for reaching the last line i
   
 --> #to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
 
-_ _Install the docker_ _
+ _Install the docker_
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
@@ -192,7 +192,9 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 sudo apt-get update
 ```
 #install latest --> `sudo apt-get install docker-ce docker-ce-cli containerd.io`
+
 OR
+
 choose your own basis the current machine
 
 `apt-cache madison docker-ce
@@ -203,14 +205,85 @@ syntax --> sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSIO
 e.g. `sudo apt-get install docker-ce=5:18.09.4~3-0~ubuntu-bionic docker-ce-cli=5:18.09.4~3-0~ubuntu-bionic containerd.io`
 
 If below command gives you error, you should restart the instance from AWS console and re-login to root
+
 `docker info`
+
+
+
+check the docker installation sourced from [the offical webpage](https://docs.docker.com/install/linux/linux-postinstall/)
+
+```
+sudo service docker status
+###Error starting daemon: Devices cgroup isn't mounted
+sudo cgroupfs-mount
+sudo service docker start
+###
+sudo systemctl enable docker # use systemd to manage which services start when the system boots. Ubuntu 14.10 and below use upstart. 
+
+```
+https://docs.docker.com/compose/install/
+sudo apt-get install -y py-pip python-dev libffi-dev openssl-dev gcc libc-dev make
+#sudo yum install git 
+ sudo curl -o /usr/local/bin/docker-compose -L "https://github.com/docker/compose/releases/download/1.18.0/docker-compose-$(uname -s)-$(uname -m)"
+ sudo chmod +x /usr/local/bin/docker-compose
+ docker-compose -v
+ docker -v
+systemctl daemon-reload
+ systemctl start docker
+
 
 ```
 adduser mastodon
+passwd mastodon
+#usermod -aG wheel mastodon # used in ec2 for adding  user to sudo group
 usermod -aG sudo mastodon
 usermod -aG docker mastodon
+chown mastodon:mastodon /home/mastodon/.docker/ -R
 su - mastodon
+sudo chmod g+rwx "$HOME/.docker" -R
+sudo chmod +x /usr/local/bin/docker-compose
 ```
+
+ _Install the mastodon_
+
+```
+cd /home/mastodon
+ git clone https://github.com/tootsuite/mastodon.git
+ cd mastodon
+ git tag -l 
+ git checkout tags/v1.4.7 # replace it with latest available from list
+ cp .env.production.sample .env.production
+ 
+ 
+ ```
+ 
+ /etc/docker/daemon.json
+sudo systemctl enable docker 
+ docker run -d -p 80:80 --name nginx nginx
+ 
+ docker exec -i -t mastodon_db_1  /bin/bash
+ su - postgres
+ createuser -P your_username
+ createdb your_databasename -O your_username
+ \q
+ 
+ 
+ docker-compose run --rm web rails db:migrate
+ docker-compose run --rm web rails assets:precompile
+ 
+ docker stop $(docker ps -a -q) && docker-compose up -d
+ 
+ 
+ sudo /etc/init.d/nginx restart
+ 
+ 
+ SMTP_SERVER=mail.plank.life 
+SMTP_PORT=465
+SMTP_LOGIN=avishkar@plank.life
+SMTP_PASSWORD=
+SMTP_FROM_ADDRESS=avishkar@plank.life
+ 
+ 
 
 - B. 
   1. After you login to AWS console from any browser, you can search / navigate to S3.
