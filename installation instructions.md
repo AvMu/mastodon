@@ -118,7 +118,7 @@ Below are the step by step instructions for getting a mastodon instance running 
   6. once the rules are in place, set up the elastic IP ( paid service ) or use the public IP for SSH
   7. open command prompt / power shell OR terminal and ssh to this instance using `ssh -i privKey.pem ubuntu@your_public_IP_here`
   
-we begin by docker installation sourced from [here] (https://docs.docker.com/v17.09/docker-for-aws/#quickstart) OR [Here]  (https://docs.docker.com/install/linux/docker-ce/ubuntu/) and for [docker swarm](https://docs.docker.com/v17.12/docker-cloud/cloud-swarm/link-aws-swarm/)
+we begin by docker installation sourced from [here](https://docs.docker.com/v17.09/docker-for-aws/#quickstart) OR [Here](https://docs.docker.com/install/linux/docker-ce/ubuntu/) and for [docker swarm](https://docs.docker.com/v17.12/docker-cloud/cloud-swarm/link-aws-swarm/)
 
 ```
 sudo -i
@@ -129,8 +129,8 @@ nano /etc/ssh/sshd_config
 ``` 
 Add these to your file OR set the following values after uncommenting
 
-ClientAliveInterval 120
-ClientAliveCountMax 720
+>ClientAliveInterval 120
+>ClientAliveCountMax 720
 
 `service sshd reload`
 
@@ -164,14 +164,14 @@ sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
+sudo nano /etc/fstab
 ```
-Make changes to file fstab
-`sudo nano /etc/fstab`# ctrl+end 
+Add the following line to file fstab # use ctrl+end for reaching the last line in file
 
- /swapfile swap swap defaults 0 0 # ctrl+x y <enter>
-# to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
+> /swapfile swap swap defaults 0 0 
+#ctrl+x y <enter>
+#to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
   
-
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
 sudo add-apt-repository \
@@ -192,8 +192,8 @@ OR
 choose your own basis the current machine
 `apt-cache madison docker-ce
 lsb_release -a `
-sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
-`sudo apt-get install docker-ce=5:18.09.4~3-0~ubuntu-bionic docker-ce-cli=5:18.09.4~3-0~ubuntu-bionic containerd.io`
+syntax --> sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
+e.g. `sudo apt-get install docker-ce=5:18.09.4~3-0~ubuntu-bionic docker-ce-cli=5:18.09.4~3-0~ubuntu-bionic containerd.io`
 
 If below command gives you error, you should restart the instance from AWS console and re-login to root
 `docker info`
