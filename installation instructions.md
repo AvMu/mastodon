@@ -128,6 +128,7 @@ sudo apt install nano
 nano /etc/ssh/sshd_config
 ``` 
 Add these to your file OR set the following values after uncommenting
+
 ClientAliveInterval 120
 ClientAliveCountMax 720
 
@@ -149,22 +150,24 @@ pip uninstall docker-compose
 Images, containers, volumes, or customized configuration files on your host are not automatically removed. To delete all images, containers, and volumes:
 `sudo rm -rf /var/lib/docker`
 
-- There are two options for escaping the **out of memory** error 
-  - 1. Swap partition
+--> There are two options for escaping the **out of memory** error 
+   1. Swap partition
 
 ```
 test
 ```
 
-  - 2. Swap file
+   2. Swap file
 ```
-sudo fallocate -l 2G /swapfile #if fallocate fails --> sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+sudo fallocate -l 2G /swapfile 
+#if fallocate fails --> sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 ```
 Make changes to file fstab
-`sudo nano /etc/fstab`# ctrl+end
+`sudo nano /etc/fstab`# ctrl+end 
+
  /swapfile swap swap defaults 0 0 # ctrl+x y <enter>
 # to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
   
@@ -177,7 +180,7 @@ sudo add-apt-repository \
    stable"
 sudo apt-get update
 
-* * Install the docker * *
+* *Install the docker* *
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
@@ -195,16 +198,16 @@ sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> c
 If below command gives you error, you should restart the instance from AWS console and re-login to root
 `docker info`
 
-
+```
 adduser mastodon
 usermod -aG sudo mastodon
 usermod -aG docker mastodon
 su - mastodon
-
 ```
+
 - B. 
-  1. As you login to AWS console from any browser, you can search / navigate to EC2.
-  2. If you want to run without incurring much cost, t2micro would be ideal. However, even after swap memory allocation, the in 
+  1. After you login to AWS console from any browser, you can search / navigate to S3.
+  2. Create new bucket
 
 
 
