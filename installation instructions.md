@@ -116,8 +116,95 @@ Below are the step by step instructions for getting a mastodon instance running 
   4. once you review and launch, you can generate and download privKey.pem 
   5. check the inbound rules for this EC2 instance by clicking launch wizard besides [inbound rules](amazon.com). Free up SSH, HTTP and HTTPS with ports 80 and 443 respectively
   6. once the rules are in place, set up the elastic IP ( paid service ) or use the public IP for SSH
-  7. open command prompt / power shell OR terminal and ssh to this instance using `ssh -i privKey.pem ubuntu@<your public IP here>
+  7. open command prompt / power shell OR terminal and ssh to this instance using `ssh -i privKey.pem ubuntu@your_public_IP_here`
+  
+we begin by docker installation sourced from [here] (https://docs.docker.com/v17.09/docker-for-aws/#quickstart) OR [Here]  (https://docs.docker.com/install/linux/docker-ce/ubuntu/) and for [docker swarm](https://docs.docker.com/v17.12/docker-cloud/cloud-swarm/link-aws-swarm/)
 
+```
+sudo -i
+sudo apt-get update
+sudo apt install nano
+
+nano /etc/ssh/sshd_config
+``` 
+Add these to your file OR set the following values after uncommenting
+ClientAliveInterval 120
+ClientAliveCountMax 720
+
+`service sshd reload`
+
+All dependencies need to be installed as root
+`
+sudo apt-get install -y apt-transport-https software-properties-common ca-certificates curl gnupg-agent 
+`
+And remove all previous installations of docker. you can come back here if you want to start over ;)
+Don't stress if below commands throw an error :D
+```
+sudo apt-get remove -y docker docker-engine docker.io
+sudo apt-get -y remove docker docker-engine docker.io containerd runc
+sudo apt-get purge docker-ce
+sudo rm /usr/local/bin/docker-compose
+pip uninstall docker-compose
+```
+Images, containers, volumes, or customized configuration files on your host are not automatically removed. To delete all images, containers, and volumes:
+`sudo rm -rf /var/lib/docker`
+
+- There are two options for escaping the **out of memory** error 
+  - 1. Swap partition
+
+```
+test
+```
+
+  - 2. Swap file
+```
+sudo fallocate -l 2G /swapfile #if fallocate fails --> sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+Make changes to file fstab
+`sudo nano /etc/fstab`# ctrl+end
+ /swapfile swap swap defaults 0 0 # ctrl+x y <enter>
+# to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
+  
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+
+* * Install the docker * *
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+```
+#install latest --> `sudo apt-get install docker-ce docker-ce-cli containerd.io`
+OR
+choose your own basis the current machine
+`apt-cache madison docker-ce
+lsb_release -a `
+sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
+`sudo apt-get install docker-ce=5:18.09.4~3-0~ubuntu-bionic docker-ce-cli=5:18.09.4~3-0~ubuntu-bionic containerd.io`
+
+If below command gives you error, you should restart the instance from AWS console and re-login to root
+`docker info`
+
+
+adduser mastodon
+usermod -aG sudo mastodon
+usermod -aG docker mastodon
+su - mastodon
+
+```
+- B. 
+  1. As you login to AWS console from any browser, you can search / navigate to EC2.
+  2. If you want to run without incurring much cost, t2micro would be ideal. However, even after swap memory allocation, the in 
 
 
 
