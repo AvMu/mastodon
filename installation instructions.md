@@ -113,8 +113,10 @@ Below are the step by step instructions for getting a mastodon instance running 
   1. As you login to AWS console from any browser, you can search / navigate to EC2.
   2. If you want to run without incurring much cost, t2micro would be ideal. However, even after swap memory allocation, the installation fails at precompiling assets. Hence, t2small is preferred for smooth and error free installation.
   3. Tried with free tier Linux AMI, but the installation would stuck up to some random unknown error. Hence, preferred choice would be latest stable version of ubuntu available from list.
-  4. once you review and launch, you can check the inbound rules for this EC2 instance by clicking launch wizard besides [inbound rules](amazon.com)
-  5. Free up SSH, HTTP and HTTPS with ports 80 and 443 respectively
+  4. once you review and launch, you can generate and download privKey.pem 
+  5. check the inbound rules for this EC2 instance by clicking launch wizard besides [inbound rules](amazon.com). Free up SSH, HTTP and HTTPS with ports 80 and 443 respectively
+  6. once the rules are in place, set up the elastic IP ( paid service ) or use the public IP for SSH
+  7. open command prompt / power shell OR terminal and ssh to this instance using `ssh -i privKey.pem ubuntu@<your public IP here>
 
 
 
