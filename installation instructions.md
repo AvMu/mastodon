@@ -118,7 +118,7 @@ Below are the step by step instructions for getting a mastodon instance running 
   6. once the rules are in place, set up the elastic IP ( paid service ) or use the public IP for SSH
   7. open command prompt / power shell OR terminal and ssh to this instance using `ssh -i privKey.pem ubuntu@your_public_IP_here`
   
-we begin by docker installation. Official steps sourced from [here](https://docs.docker.com/v17.09/docker-for-aws/#quickstart) OR [Here](https://docs.docker.com/install/linux/docker-ce/ubuntu/) and for [docker swarm](https://docs.docker.com/v17.12/docker-cloud/cloud-swarm/link-aws-swarm/)
+we begin by setting up dependencies prior to installation of docker and mastodon. 
 
 ```
 sudo -i
@@ -138,11 +138,14 @@ Add these to your file OR set the following values after uncommenting
 `service sshd reload`
 
 All dependencies need to be installed as root
+
 `
 sudo apt-get install -y apt-transport-https software-properties-common ca-certificates curl gnupg-agent 
 `
-And remove all previous installations of docker. you can come back here if you want to start over ;)
-Don't stress if below commands throw an error :D
+
+And remove all previous installations of docker. you can come back here if you want to start over ;) 
+
+Don't stress if below commands throw an error like package/file doesn't exist :D
 ```
 sudo apt-get remove -y docker docker-engine docker.io
 sudo apt-get -y remove docker docker-engine docker.io containerd runc
@@ -153,7 +156,7 @@ pip uninstall docker-compose
 Images, containers, volumes, or customized configuration files on your host are not automatically removed. To delete all images, containers, and volumes:
 `sudo rm -rf /var/lib/docker`
 
---> There are two options for escaping the **out of memory** error 
+--> There are two options for escaping the **out of memory** error while precompiling assets
    1. Swap partition
 
 ```
@@ -175,18 +178,10 @@ Add the following line to file fstab # use ctrl+end for reaching the last line i
 
 #ctrl+x, y, enter
   
---> #to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
+#to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
 
- _Install the docker_
+ _Install the docker_ [Official steps](https://docs.docker.com/v17.09/docker-for-aws/#quickstart) sourced from [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/) and for [docker swarm](https://docs.docker.com/v17.12/docker-cloud/cloud-swarm/link-aws-swarm/)
 ```
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update
-
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -198,7 +193,7 @@ OR
 
 choose your own basis the current machine OS release
 
-`lsb_release -a 
+` lsb_release -a 
 
 apt-cache madison docker-ce
  `
@@ -207,24 +202,21 @@ syntax --> sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSIO
 
 e.g. `sudo apt-get install docker-ce=5:18.09.4~3-0~ubuntu-bionic docker-ce-cli=5:18.09.4~3-0~ubuntu-bionic containerd.io`
 
-If below command gives you error, you should restart the instance from AWS console and re-login to root
+If below command gives you error, you should restart the instance from AWS console and re-login to root. Check the docker [post installation guide](https://docs.docker.com/install/linux/linux-postinstall/)
 
-`docker info`
-
-check the docker installation sourced from [the offical webpage](https://docs.docker.com/install/linux/linux-postinstall/)
-
-`sudo service docker status`
+`docker info
+sudo service docker status`
 
 If you get error, **starting daemon** : Devices cgroup isn't mounted
 
 `sudo cgroupfs-mount
-
 sudo service docker start`
 
 else you are good to go ahead and use systemd to manage which services start when the system boots. Ubuntu 14.10 and below use upstart. 
+
 `sudo systemctl enable docker`
 
- _Install the docker-compose_  [official page](https://docs.docker.com/compose/install/)
+ _Install the docker-compose_    [official page here](https://docs.docker.com/compose/install/)
 ```
 sudo apt-get install -y py-pip python-dev libffi-dev openssl-dev gcc libc-dev make
 #sudo yum install git # for EC2 custom Linux AMI
@@ -236,7 +228,7 @@ docker -v
 systemctl daemon-reload
 systemctl start docker
 ```
- _Install the mastodon_  [official instructions](https://github.com/tootsuite/documentation/blob/master/Running-Mastodon/Docker-Guide.md)
+ _Install the mastodon_    [official instructions here](https://github.com/tootsuite/documentation/blob/master/Running-Mastodon/Docker-Guide.md)
 
 ```
 adduser mastodon
@@ -256,7 +248,7 @@ cd /home/mastodon
   git checkout tags/v1.4.7 # replace 1.4.7 with latest available from list
   #git checkout $(git tag -l | grep -v 'rc[0-9]*$' | sort -V | tail -n 1)
   cp .env.production.sample .env.production
-nano docker-compose.yml 
+  nano docker-compose.yml 
  ```
 Put below in the file 
  ```
@@ -342,23 +334,40 @@ networks:
   internal_network:
     internal: true
  ```
- 
- /etc/docker/daemon.json
-sudo systemctl enable docker 
- docker run -d -p 80:80 --name nginx nginx
- 
- docker exec -i -t mastodon_db_1  /bin/bash
+After saving this file, run `docker-compose build`
+
+Now for editing the .env.production file, we need 5 values. 
+
+Run this three times to get the loonnng code `docker-compose run --rm web bundle exec rake secret`
+
+paste these codes against SECRET_KEY_BASE, OTP_SECRET & PAPERCLIP_SECRET
+
+Run this two times `docker-compose run --rm web bundle exec rake mastodon:webpush:generate_vapid_key`
+
+paste these codes against VAPID_PUBLIC_KEY & VAPID_PUBLIC_KEY.
+You can edit the file using nano
+
+You will need to configure the database by entering in postgres docker container
+```
+docker exec -i -t mastodon_db_1  /bin/bash
  su - postgres
  createuser -P your_username
  createdb your_databasename -O your_username
- \q
- 
- 
- docker-compose run --rm web rails db:migrate
- docker-compose run --rm web rails assets:precompile
- 
- docker stop $(docker ps -a -q) && docker-compose up -d
- 
+ createdb mastodon_production -O your_username
+\q
+```
+
+And finally run these commands to make the server live up and running
+```
+docker-compose run --rm web rails db:migrate
+docker-compose run --rm web rails assets:precompile
+docker stop $(docker ps -a -q) && docker-compose up -d
+```
+
+
+ /etc/docker/daemon.json
+sudo systemctl enable docker 
+ docker run -d -p 80:80 --name nginx nginx
  
  sudo /etc/init.d/nginx restart
  
