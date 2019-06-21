@@ -133,7 +133,8 @@ Add these to your file OR set the following values after uncommenting
 
 >ClientAliveCountMax 720
 
-#ctrl+x y <enter>
+#ctrl+x, y, enter
+
 `service sshd reload`
 
 All dependencies need to be installed as root
@@ -172,7 +173,7 @@ Add the following line to file fstab # use ctrl+end for reaching the last line i
 
 > /swapfile swap swap defaults 0 0 
 
-#ctrl+x y <enter>
+#ctrl+x, y, enter
   
 --> #to remove the swap --> `sudo swapoff /mnt/swapfile && sudo rm /mnt/swapfile`
 
@@ -195,10 +196,12 @@ sudo apt-get update
 
 OR
 
-choose your own basis the current machine
+choose your own basis the current machine OS release
 
-`apt-cache madison docker-ce
-lsb_release -a `
+`lsb_release -a 
+
+apt-cache madison docker-ce
+ `
 
 syntax --> sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
 
@@ -208,53 +211,136 @@ If below command gives you error, you should restart the instance from AWS conso
 
 `docker info`
 
-
-
 check the docker installation sourced from [the offical webpage](https://docs.docker.com/install/linux/linux-postinstall/)
 
-```
-sudo service docker status
-###Error starting daemon: Devices cgroup isn't mounted
-sudo cgroupfs-mount
-sudo service docker start
-###
-sudo systemctl enable docker # use systemd to manage which services start when the system boots. Ubuntu 14.10 and below use upstart. 
+`sudo service docker status`
 
+If you get error, **starting daemon** : Devices cgroup isn't mounted
+
+`sudo cgroupfs-mount
+
+sudo service docker start`
+
+else you are good to go ahead and use systemd to manage which services start when the system boots. Ubuntu 14.10 and below use upstart. 
+`sudo systemctl enable docker`
+
+ _Install the docker-compose_  [official page](https://docs.docker.com/compose/install/)
 ```
-https://docs.docker.com/compose/install/
 sudo apt-get install -y py-pip python-dev libffi-dev openssl-dev gcc libc-dev make
-#sudo yum install git 
- sudo curl -o /usr/local/bin/docker-compose -L "https://github.com/docker/compose/releases/download/1.18.0/docker-compose-$(uname -s)-$(uname -m)"
- sudo chmod +x /usr/local/bin/docker-compose
- docker-compose -v
- docker -v
-systemctl daemon-reload
- systemctl start docker
+#sudo yum install git # for EC2 custom Linux AMI
+sudo curl -o /usr/local/bin/docker-compose -L "https://github.com/docker/compose/releases/download/1.18.0/docker-compose-$(uname -s)-$(uname -m)"
 
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose -v
+docker -v
+systemctl daemon-reload
+systemctl start docker
+```
+ _Install the mastodon_  [official instructions](https://github.com/tootsuite/documentation/blob/master/Running-Mastodon/Docker-Guide.md)
 
 ```
 adduser mastodon
 passwd mastodon
-#usermod -aG wheel mastodon # used in ec2 for adding  user to sudo group
 usermod -aG sudo mastodon
+#usermod -aG wheel mastodon # used in EC2 custom Linux 2 AMI for adding  user to sudo group
 usermod -aG docker mastodon
 chown mastodon:mastodon /home/mastodon/.docker/ -R
 su - mastodon
 sudo chmod g+rwx "$HOME/.docker" -R
 sudo chmod +x /usr/local/bin/docker-compose
-```
 
- _Install the mastodon_
-
-```
 cd /home/mastodon
- git clone https://github.com/tootsuite/mastodon.git
- cd mastodon
- git tag -l 
- git checkout tags/v1.4.7 # replace it with latest available from list
- cp .env.production.sample .env.production
- 
- 
+ git clone https://github.com/tootsuite/mastodon.git live
+ cd live
+  git tag -l 
+  git checkout tags/v1.4.7 # replace 1.4.7 with latest available from list
+  #git checkout $(git tag -l | grep -v 'rc[0-9]*$' | sort -V | tail -n 1)
+  cp .env.production.sample .env.production
+nano docker-compose.yml 
+ ```
+Put below in the file 
+ ```
+ version: '3'
+services:
+
+  db:
+    restart: always
+    image: postgres:9.6-alpine
+    networks:
+      - internal_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  redis:
+    restart: always
+    image: redis:5.0-alpine
+    networks:
+      - internal_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    volumes:
+      - ./redis:/data
+
+  web:
+#    build: .
+    image: tootsuite/mastodon:latest
+    restart: always
+    env_file: .env.production
+    command: bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000 -b '0.0.0.0'"
+    networks:
+      - external_network
+      - internal_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --header 'x-forwarded-proto: https' --proxy=off localhost:3000/api/v1/instance || exit 1"]
+    ports:
+      - "0.0.0.0:3000:3000"
+    depends_on:
+      - db
+      - redis
+#      - es
+    volumes:
+      - ./public/system:/mastodon/public/system
+      - ./public/assets:/mastodon/public/assets
+      - ./public/packs:/mastodon/public/packs
+
+  streaming:
+#    build: .
+    image: tootsuite/mastodon:latest
+    restart: always
+    env_file: .env.production
+    command: yarn start
+    networks:
+      - external_network
+      - internal_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --header 'x-forwarded-proto: https' --proxy=off localhost:4000/api/v1/streaming/health || exit 1"]
+    ports:
+      - "0.0.0.0:4000:4000"
+    depends_on:
+      - db
+      - redis
+
+  sidekiq:
+ #   build: .
+    image: tootsuite/mastodon:latest
+    restart: always
+    env_file: .env.production
+    command: bundle exec sidekiq
+    depends_on:
+      - db
+      - redis
+    networks:
+      - external_network
+      - internal_network
+    volumes:
+      - ./public/system:/mastodon/public/system
+      - ./public/packs:/mastodon/public/packs
+networks:
+  external_network:
+  internal_network:
+    internal: true
  ```
  
  /etc/docker/daemon.json
