@@ -383,6 +383,9 @@ SMTP_FROM_ADDRESS=avishkar@plank.life
 - B. 
   1. After you login to AWS console from any browser, you can search / navigate to S3.
   2. Create new bucket
+  3. enable static web hosting in properties of bucket and note the endpoint
+  4. [sourced from here](https://medium.com/@Keithweaver_/only-allowing-access-to-your-s3-bucket-via-your-website-5ca5c8546152)
+  5. generate access key and secret key
 
 
 
